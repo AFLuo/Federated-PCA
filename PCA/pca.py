@@ -2,19 +2,18 @@ import numpy as np
 from numpy import matrix as mt
 np.random.seed(0)
 
-def randomized_pca(input:np.array):
-    pass
-def classic_PCA(X:np.array,var_cont):
+def Eigen_PCA(X:np.array,var_cont):
     '''
         input: X, n by m, m is the number of features, n is the number of samples.
         This functions processes PCA with eigen_decomposition
     '''
+    n,m=X.shape
     # mean-centering
     Y=X-X.mean(axis=0)
     # 排除量纲影响
     Y=Y/Y.std(axis=0)
     # compute covariance matrix
-    Z=np.matmul(Y.T,Y)
+    Z=np.matmul(Y.T,Y)/(n-1)
     # Z is a square matrix m by m
     # compute eigendecomposition
     '''
@@ -34,27 +33,62 @@ def classic_PCA(X:np.array,var_cont):
     eigenvectors=eigenvectors[:,idx]
     # find the number of k which satisties the variance contribution rate
     k=0
-    for i in range(X.shape[1]):
+    for i in range(m-1):
         if eigenvalues[:i+1].sum()/eigenvalues.sum() >= var_cont:
             k=i+1
             break
+    # then unite the k biggest eigenvectors and everything is done
+    for i in range(k):
+        length=np.sqrt(np.dot(eigenvectors[:,i],eigenvectors[:,i]))
+        eigenvectors[:,i]=eigenvectors[:,i]/length
+    # you can possibly project existing sample matrix into new dimensions if you wish
+    projected_X=np.matmul(X,eigenvectors[:,:k])
+    return projected_X
     
-    
-    # 
+        
 
-def modern_PCA(X:np.array):
+def SVD_PCA(X:np.array):
     '''
         input: X, n by m, m is the number of features, n is the number of samples.
-        This function processes PCA with Singular
+        This function processes PCA with Singular Value Decomposition solver.
+        The number of Principal Components (k) is predefined.
     '''
+    # construct new matrix
+    n,m=X.shape
+    # mean-cencering
+    X=X-X.mean(axis=0)
+    X_prime=X/(n-1)
+    # truncated SVD: k singular values and k sigular vectors
+
+    # projection
     pass
 
-def randomized_PCA(X:np.array):
+def randmized_SVD(X,k):
+    '''
+        Randomized SVD solver:
+            Given an m by n matrix X, a target number k of singular vectors, and an
+            exponent q, this procedure computes an approximate rank-2k factorization U \Delta V*, where U and V are orthonormal and \Delta is
+            nonnegative and diagonal
+    '''
+    # pesudocodes: 
+    # Stage A:
+    #   Generate an n by 2k Gaussian test matrix \Omega
+    #   Form Y=(AA*)^q A \Omega by multiplying alternatively with A and A*
+    #   Construct a matrix Q whose columns form an orthnormal basis for the range of Y
+    # Stage B:
+    #   Form B=Q*A
+    #   Compute an SVD of the small matrix B=\tilde U \Delta V*
+    #   Set U=Q\tilde U
+    pass
+def randomized_PCA(X:np.array,k):
     '''
         input: X, n by m, m is the number of features, n is the number of samples.
         This function processes PCA with randomized SVD solver from Halko et al, which is discussed in SF-PCA.
     '''
+    
     pass
+
+
 
 def schmidt_orthon(input:np.matrix):
     pass
@@ -62,4 +96,4 @@ def schmidt_orthon(input:np.matrix):
 if __name__=="__main__":
     # randomly generate sample matrix
     X=np.random.normal(0,2,(5,10))
-    classic_PCA(X)
+    print(Eigen_PCA(X,0.75))
